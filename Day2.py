@@ -122,3 +122,9 @@ print(df_criteria)
 #
 # Important: Don't calculate the average across all employees. We want a separate average for each department, considering only experienced employees.
 
+
+exp_emps = df[(df['experience'] > 4) & (df['salary_status'] != "Missing")]
+print(exp_emps)
+
+avg_sal_dep = exp_emps.groupby('department')['salary'].mean()
+print(avg_sal_dep)
