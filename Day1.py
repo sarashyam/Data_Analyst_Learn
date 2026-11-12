@@ -508,3 +508,475 @@ print(avg_dep_sal)
 # than IT because one of the employees salary is missing which is problem here that leads us to think y it happened
 # and about the performance the salary itself cant decide , we also need to consider the experience they have that lead to hike in salary
 # and also some factors are not shown here like the pressure handlig capacity the amount of work they are getting the levels they are working on and all
+
+
+
+"""
+# DAY 1 – PYTHON & PANDAS FUNDAMENTALS
+
+## 1. Creating a DataFrame
+
+**Why do we use it?**
+
+To store and analyse structured data in rows and columns.
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    'employee': ['John', 'Sara', 'Mike', 'Anna'],
+    'department': ['IT', 'HR', 'IT', 'Finance'],
+    'salary': [50000, 60000, 70000, 80000]
+})
+```
+
+### Useful DataFrame methods
+
+| Method          | Purpose                           |
+| --------------- | --------------------------------- |
+| `df.head()`     | First 5 rows                      |
+| `df.tail()`     | Last 5 rows                       |
+| `df.shape`      | Number of rows and columns        |
+| `df.columns`    | Column names                      |
+| `df.info()`     | Column information and data types |
+| `df.describe()` | Statistical summary               |
+| `df.dtypes`     | Data types of columns             |
+
+Remember:
+
+* `shape` is an attribute, not a function.
+* `head()` and `tail()` are methods.
+
+---
+
+## 2. Selecting Columns
+
+### Select one column
+
+```python
+df['salary']
+```
+
+Returns a Series.
+
+### Select multiple columns
+
+```python
+df[['employee', 'salary']]
+```
+
+Returns a DataFrame.
+
+### Select columns by position
+
+```python
+df.iloc[:, 0:2]
+```
+
+Selects the first two columns.
+
+---
+
+## 3. Filtering DataFrames
+
+**Why do we use it?**
+
+To extract records that satisfy particular conditions.
+
+### Example: Salary greater than 50,000
+
+```python
+df[df['salary'] > 50000]
+```
+
+### Multiple conditions – AND (`&`)
+
+Both conditions must be true.
+
+```python
+df[
+    (df['salary'] > 50000) &
+    (df['department'] == 'IT')
+]
+```
+
+### Multiple conditions – OR (`|`)
+
+At least one condition must be true.
+
+```python
+df[
+    (df['department'] == 'IT') |
+    (df['department'] == 'HR')
+]
+```
+
+### NOT (`~`)
+
+Reverses a condition.
+
+```python
+df[~(df['department'] == 'IT')]
+```
+
+Remember: Always put individual conditions inside parentheses when using `&` and `|`.
+
+---
+
+## 4. LOC vs ILOC
+
+One of the most important Pandas concepts.
+
+### LOC – Label-based selection
+
+Used when selecting rows or columns using labels.
+
+```python
+df.loc[0:2, ['employee', 'salary']]
+```
+
+### ILOC – Position-based selection
+
+Used when selecting rows or columns using integer positions.
+
+```python
+df.iloc[0:3, 0:2]
+```
+
+### Difference
+
+| LOC                                    | ILOC                     |
+| -------------------------------------- | ------------------------ |
+| Uses labels                            | Uses integer positions   |
+| Label-based                            | Position-based           |
+| End label is included in a label slice | End position is excluded |
+
+Example:
+
+```python
+df.loc[0:2]
+```
+
+Returns labels 0, 1 and 2.
+
+```python
+df.iloc[0:2]
+```
+
+Returns positions 0 and 1.
+
+---
+
+## 5. GROUPBY – Grouping Data
+
+**Why do we use it?**
+
+To calculate statistics for different groups.
+
+Example: Average salary per department.
+
+```python
+df.groupby('department')['salary'].mean()
+```
+
+### Common aggregations
+
+| Function    | Purpose                  |
+| ----------- | ------------------------ |
+| `sum()`     | Total                    |
+| `mean()`    | Average                  |
+| `max()`     | Maximum                  |
+| `min()`     | Minimum                  |
+| `count()`   | Count non-missing values |
+| `nunique()` | Count unique values      |
+
+### Multiple aggregations using agg()
+
+```python
+df.groupby('department').agg(
+    Avg_salary=('salary', 'mean'),
+    Max_salary=('salary', 'max'),
+    Total_salary=('salary', 'sum')
+)
+```
+
+Use `agg()` when you need multiple summary calculations.
+
+---
+
+## 6. IDXMAX and IDXMIN
+
+**Why do we use them?**
+
+To find the index of the row containing the highest or lowest value.
+
+### Highest salary
+
+```python
+idx = df['salary'].idxmax()
+
+print(df.loc[idx])
+```
+
+### Lowest salary
+
+```python
+idx = df['salary'].idxmin()
+
+print(df.loc[idx])
+```
+
+Important distinction:
+
+* `max()` returns the maximum value.
+* `idxmax()` returns the index label of the maximum value.
+
+`idxmax()` returns the first occurrence if multiple rows share the maximum.
+
+---
+
+## 7. TRANSFORM
+
+**Why do we use it?**
+
+When you want a group-level calculation but need the result aligned with every original row.
+
+Example: Add the department's average salary to every employee.
+
+```python
+df['dept_avg'] = (
+    df.groupby('department')['salary']
+    .transform('mean')
+)
+```
+
+### Difference between agg() and transform()
+
+| agg()                       | transform()                              |
+| --------------------------- | ---------------------------------------- |
+| Returns group-level results | Returns results aligned to original rows |
+| Usually fewer rows          | Same number of rows as input             |
+| Useful for summaries        | Useful for row-wise comparisons          |
+
+Example:
+
+```python
+df['dept_avg'] = df.groupby(
+    'department'
+)['salary'].transform('mean')
+
+result = df[df['salary'] > df['dept_avg']]
+```
+
+This finds employees earning above their department's average salary.
+
+---
+
+## 8. APPLY and LAMBDA
+
+**Why do we use them?**
+
+To apply custom calculations or transformations.
+
+### Lambda
+
+A small anonymous function.
+
+```python
+lambda x: x * 2
+```
+
+### Apply
+
+Apply a function to values in a Series.
+
+Example: Categorise salaries.
+
+```python
+df['salary_category'] = df['salary'].apply(
+    lambda x: 'High' if x >= 60000 else 'Low'
+)
+```
+
+### Custom function
+
+```python
+def salary_status(x):
+    if x >= 70000:
+        return 'High'
+    elif x >= 50000:
+        return 'Medium'
+    else:
+        return 'Low'
+
+df['salary_status'] = df['salary'].apply(salary_status)
+```
+
+Remember:
+
+* `apply()` is useful for custom logic.
+* Prefer built-in vectorised Pandas operations when they can do the same job more efficiently.
+
+---
+
+## 9. CONDITIONAL UPDATES USING LOC
+
+**Why do we use it?**
+
+To update specific rows based on a condition.
+
+Example: Give a bonus to employees earning below 50,000.
+
+```python
+df.loc[df['salary'] < 50000, 'bonus'] = 5000
+```
+
+You can also create a new column:
+
+```python
+df.loc[df['salary'] >= 60000, 'category'] = 'High'
+df.loc[df['salary'] < 60000, 'category'] = 'Low'
+```
+
+---
+
+## 10. MISSING VALUES – INTRODUCTION
+
+### Identify missing values
+
+```python
+df.isna()
+```
+
+### Count missing values per column
+
+```python
+df.isna().sum()
+```
+
+### Remove missing records
+
+```python
+df.dropna()
+```
+
+### Fill missing values
+
+```python
+df['salary'].fillna(0)
+```
+
+Important: Don't automatically replace missing salaries with zero. First investigate why the values are missing.
+
+---
+
+## 11. COUNT() vs SIZE()
+
+An important distinction.
+
+| count()                   | size()                       |
+| ------------------------- | ---------------------------- |
+| Counts non-missing values | Counts all rows              |
+| Ignores NaN               | Includes rows containing NaN |
+
+Example:
+
+```python
+df.groupby('department')['salary'].count()
+```
+
+Counts employees with available salary values.
+
+```python
+df.groupby('department').size()
+```
+
+Counts all employee records in each department.
+
+---
+
+## 12. STRING CLEANING
+
+Useful when working with inconsistent text data.
+
+### Remove leading/trailing spaces
+
+```python
+df['employee'] = df['employee'].str.strip()
+```
+
+### Convert to lowercase
+
+```python
+df['employee'] = df['employee'].str.lower()
+```
+
+### Convert to uppercase
+
+```python
+df['employee'] = df['employee'].str.upper()
+```
+
+### Replace text
+
+```python
+df['department'] = df['department'].str.replace(
+    'Information Technology',
+    'IT'
+)
+```
+
+---
+
+# QUICK INTERVIEW REVISION
+
+| Question                           | Concept            |
+| ---------------------------------- | ------------------ |
+| Select rows based on conditions    | Boolean filtering  |
+| Select rows by labels              | loc                |
+| Select rows by position            | iloc               |
+| Calculate department-wise average  | groupby() + mean() |
+| Find highest salary employee       | idxmax()           |
+| Add department average to each row | transform()        |
+| Apply custom logic                 | apply()            |
+| Create a small anonymous function  | lambda             |
+| Update selected rows               | loc                |
+| Count missing values               | isna().sum()       |
+| Count non-missing values           | count()            |
+| Count all records                  | size()             |
+| Clean unwanted spaces              | str.strip()        |
+
+# COMMON MISTAKES TO AVOID
+
+1. Forgetting parentheses around conditions when using `&` and `|`.
+2. Confusing `loc` with `iloc`.
+3. Confusing `max()` with `idxmax()`.
+4. Using `agg()` when you need row-aligned results from `transform()`.
+5. Assuming `count()` and `size()` return the same result.
+6. Automatically replacing missing values with zero.
+7. Using `apply()` for calculations that built-in Pandas methods can perform more efficiently.
+
+---
+
+## DAY 1 COMPLETED!
+
+### What you learned
+
+* DataFrame creation and inspection.
+* Column and row selection.
+* Filtering with multiple conditions.
+* LOC and ILOC.
+* GroupBy and aggregation.
+* IDXMAX and IDXMIN.
+* Transform.
+* Apply and Lambda.
+* Conditional updates.
+* Missing-value basics.
+* String cleaning.
+
+**Main takeaway:** Understand what result you want first. Then decide which Pandas operation will produce that result.
+
+
+
+
+"""
